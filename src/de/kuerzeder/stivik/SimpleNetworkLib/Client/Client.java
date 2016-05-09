@@ -6,7 +6,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 /**
- * SimpleNetworkLib:
+ * SimpleNetworkLib: A simple Client class for Network Communication
  * @author Stefan Kürzeder
  * created on 09.05.2016 in BY, Germany
  */
