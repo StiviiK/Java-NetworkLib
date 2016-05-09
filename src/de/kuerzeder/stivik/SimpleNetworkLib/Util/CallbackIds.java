@@ -6,5 +6,7 @@ package de.kuerzeder.stivik.SimpleNetworkLib.Util;
  * created on 09.05.2016 in BY, Germany
  */
 public enum CallbackIds {
-    ON_CONNECTED, ON_DISCONNECTED, ON_ERROR;
+    ON_ERROR, ON_SYSTEM_MESSAGE, // Global
+    SERVER_PRE_START, SERVER_POST_START, // Server only
+    CLIENT_ON_CONNECTED, CLIENT_ON_DISCONNECTED, // Client only
 }
