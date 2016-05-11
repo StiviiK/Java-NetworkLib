@@ -15,7 +15,7 @@ import java.util.HashMap;
  * @author Stefan Kürzeder
  * created on 09.05.2016 in BY, Germany
  */
-public class Client {
+public abstract class Client {
 
     private boolean debugMode = false;
     private InetSocketAddress remoteHost;
@@ -33,12 +33,31 @@ public class Client {
         this.callbacks  = new HashMap<>();
     }
 
+    // Abstract methods //
+    /**
+     * Sends the login "command" to the server, to receive messages
+     */
+    public abstract void login();
+
+    /**
+     * Logs out from the server, so we no longer receive message
+     */
+    public abstract void logout();
+
+    /**
+     * Gets executed when receiving a new NetworkPackage
+     * @param networkPackage which got received from the Server
+     */
+    public abstract void receiveNetworkPackage(NetworkPackage networkPackage);
+    // END //
+
+    // Class methods //
     /**
      * Connects to the server and opens an new networkSocket
      */
     public void connect(){
         try {
-            if(networkSocket == null || !networkSocket.isConnected()) {
+            if(networkSocket == null || !networkSocket.isConnected() || networkSocket.isClosed()) {
                 networkSocket = new Socket();
                 networkSocket.connect(this.remoteHost, this.timeout);
             } else {
@@ -69,9 +88,6 @@ public class Client {
             listeningThread.interrupt();
         }
         if(networkSocket != null && networkSocket.isConnected()) {
-            if(isLoggedin) { // If we're loggedin -> logout before disconnect
-                logout();
-            }
             try {
                 networkSocket.close();
             } catch (IOException e) {
@@ -81,34 +97,21 @@ public class Client {
     }
 
     /**
-     * Sends the login "command" to the server, to receive messages
+     * Starts the listeningThread of the Client which waits
+     * for new NetworkPackets from the Server and handles them
      */
-    public void login(){
-        if(!isLoggedin) {
-
-        }
-    }
-
-    /**
-     * Logs out from the server, so we no longer receive message
-     */
-    public void logout(){
-        if(isLoggedin){
-
-        }
-    }
-
     private void listen(){
         if(listeningThread != null && listeningThread.isAlive())
             return;
 
         listeningThread = new Thread(() -> {
-           while(true){
+           while(networkSocket != null && networkSocket.isConnected()){
                try {
                    ObjectInputStream inputStream = new ObjectInputStream(networkSocket.getInputStream());
                    Object input = inputStream.readObject();
 
                    if(input instanceof NetworkPackage){
+                       receiveNetworkPackage((NetworkPackage) input);
                        runCallback(Callback.ON_NEW_NETPACKAGE, (NetworkPackage) input);
                    }
                } catch (IOException  e) { // Socket is closed
@@ -123,6 +126,11 @@ public class Client {
         listeningThread.start();
     }
 
+    /**
+     * Writes a new NetworkPackage on the (Client-)networkSocket,
+     * so the Server can read them and handle it
+     * @param networkPackage which should get written on the networkSocket-Stream
+     */
     public void write(NetworkPackage networkPackage){
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(networkSocket.getOutputStream());
@@ -168,8 +176,5 @@ public class Client {
             callback.run(null);
         }
     }
-
-    public boolean isConnected(){
-        return !networkSocket.isClosed();
-    }
+    // END //
 }

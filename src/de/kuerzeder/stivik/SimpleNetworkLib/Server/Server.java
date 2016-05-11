@@ -8,14 +8,14 @@ import java.net.Socket;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.channels.AlreadyConnectedException;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * SimpleNetworkLib: A simple Server class for Network Communication
  * @author Stefan Kürzeder
  * created on 09.05.2016 in BY, Germany
  */
-public class Server {
+public abstract class Server {
 
     private ServerSocket serverSocket;
     private int port;
@@ -30,27 +30,73 @@ public class Server {
         this.callbacks = new HashMap<>();
     }
 
+    // Abstract methods
+    /**
+     * Gets executed before the server realy gets started,
+     * before the ServerSocket gets openend and the Server starts listening
+     */
+    public abstract void preStart();
+
+    /**
+     * Gets executed when the server has been started
+     * and the server listening started
+     */
+    public abstract void postStart();
+
+
+    /**
+     * Gets executed when receiving a new NetworkPackage from a client
+     * @param clientSocket the socket of client (to send back a message)
+     * @param networkPackage which got received from the client
+     */
+    public abstract void receiveNetworkPackage(Socket clientSocket, NetworkPackage networkPackage);
+
+    /**
+     * Override this method to check if the client is loggedin or not
+     * @param clientSocket the socket of the client which should get checked
+     * @return default value if method gets not overriden
+     */
+    public boolean isSocketValid(Socket clientSocket) { return true; }
+
+    /**
+     * Ovveride this method to handle "login"-Packages from a client
+     * @param clientSocket the socket of the client which should get loggedin
+     * @param networkPackage the NetworkPackage which the client send
+     */
+    public void socketLogin(Socket clientSocket, NetworkPackage networkPackage) { }
+
+    /**
+     * Ovveride this method to handle "logout"-Packages from a client
+     * @param clientSocket the socket of the client which should get loggedin
+     * @param networkPackage the NetworkPackage which the client send
+     */
+    public void socketLogout(Socket clientSocket, NetworkPackage networkPackage) { }
+    //
+
+    // Class methods
+    /**
+     * Handles the starting of the Server (init Server-Socket, start listening, ...)
+     */
     public void startServer(){
-        runCallback(Callback.ON_SYSTEM_MESSAGE, "[Info] Starting the Server!");
         preStart();
+        runCallback(Callback.ON_SYSTEM_MESSAGE, "[Info] Starting the Server!");
 
         initServer();
         listen();
+
+        postStart();
     }
 
-    private void preStart(){
-        runCallback(Callback.SERVER_PRE_START);
-    }
-
+    /**
+     * Opens the ServerSocket and try's to resolve the remote-Adress
+     */
     private void initServer(){
         if(serverSocket == null) {
             try {
                 serverSocket = new ServerSocket(this.port);
                 runCallback(Callback.ON_SYSTEM_MESSAGE, "[Info] Trying to resolve Address");
                 try {
-                    BufferedReader in = new BufferedReader(
-                            new InputStreamReader(new URL("http://bot.whatismyipaddress.com/").openStream())
-                    );
+                    BufferedReader in = new BufferedReader(new InputStreamReader(new URL("http://bot.whatismyipaddress.com/").openStream()));
                     runCallback(Callback.ON_SYSTEM_MESSAGE, "[Info] Bound to Address " + in.readLine() + ":" + serverSocket.getLocalPort());
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
@@ -63,6 +109,11 @@ public class Server {
         }
     }
 
+    /**
+     * Starts the listeningThread of the Server which accepts
+     * new Client-Sockets and handle their Streams and processes
+     * the received NetworkPackages
+     */
     private void listen(){
         listeningThread = new Thread(() -> {
             while(true){
@@ -75,8 +126,20 @@ public class Server {
                                 Object input = inputStream.readObject();
 
                                 if (input instanceof NetworkPackage) {
-                                    runCallback(Callback.ON_NEW_NETPACKAGE, (NetworkPackage) input);
-                                    write(clientSocket, new NetworkPackage("STATUS", true)); // @TODO: 10.05.2016 Improve this -> so the client can read this within the write method
+                                    NetworkPackage networkPackage = (NetworkPackage) input;
+                                    if(networkPackage.getId().equalsIgnoreCase("client:login")) {
+                                        socketLogin(clientSocket, networkPackage);
+                                    } else if(networkPackage.getId().equalsIgnoreCase("client:logout")) {
+                                        socketLogout(clientSocket, networkPackage);
+                                    } else if(isSocketValid(clientSocket)) {
+                                        receiveNetworkPackage(clientSocket, networkPackage);
+                                        runCallback(Callback.ON_NEW_NETPACKAGE, networkPackage);
+
+                                        // Send back a Status
+                                        write(clientSocket, new NetworkPackage("STATUS", true));
+                                    } else {
+                                        write(clientSocket, new NetworkPackage("STATUS", false));
+                                    }
                                 }
                             } catch (IOException e) { // Client has disconnected
                                 break;
@@ -98,6 +161,11 @@ public class Server {
         listeningThread.start();
     }
 
+    /**
+     * Sends the client a new NetworkPackage, on which the client can react on
+     * @param clientSocket on which the NetworkPackage should get written
+     * @param networkPackage which should get written on the Socket-Stream
+     */
     private void write(Socket clientSocket, NetworkPackage networkPackage){
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
