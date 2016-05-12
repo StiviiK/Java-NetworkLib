@@ -1,8 +1,10 @@
 package de.kuerzeder.stivik.SimpleNetworkLib.Tests;
 
 import de.kuerzeder.stivik.SimpleNetworkLib.Server.Server;
-import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPackage;
+import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPacket;
+
 import java.net.Socket;
+import java.util.EventListener;
 
 /**
  * SimpleNetworkLib:
@@ -17,7 +19,7 @@ public class TestServer extends Server {
 
     @Override
     public void preStart() {
-        System.out.println("SERVER: [Info] pre-Start!");
+
     }
 
     @Override
@@ -26,12 +28,12 @@ public class TestServer extends Server {
     }
 
     @Override
-    public void socketLogin(Socket clientSocket, NetworkPackage networkPackage) {
+    public void socketLogin(Socket clientSocket, NetworkPacket networkPackage) {
 
     }
 
     @Override
-    public void socketLogout(Socket clientSocket, NetworkPackage networkPackage) {
+    public void socketLogout(Socket clientSocket, NetworkPacket networkPackage) {
 
     }
 
@@ -41,7 +43,7 @@ public class TestServer extends Server {
     }
 
     @Override
-    public void receiveNetworkPackage(Socket clientSocket, NetworkPackage networkPackage) {
-        System.out.println("Server: Socket[" + clientSocket.getInetAddress().toString() + "] -> NetworkPackage[" + networkPackage.getId() + ":" + networkPackage.get(1) + "]");
+    public void receiveNetworkPackage(Socket clientSocket, NetworkPacket networkPackage) {
+        System.out.println("Server: Socket[" + clientSocket.getInetAddress().toString() + "] -> NetworkPacket[" + networkPackage.getId() + ":" + networkPackage.get(1) + "]");
     }
 }

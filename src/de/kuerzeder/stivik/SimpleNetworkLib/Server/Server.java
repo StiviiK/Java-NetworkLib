@@ -45,11 +45,11 @@ public abstract class Server {
 
 
     /**
-     * Gets executed when receiving a new NetworkPackage from a client
+     * Gets executed when receiving a new NetworkPacket from a client
      * @param clientSocket the socket of client (to send back a message)
-     * @param networkPackage which got received from the client
+     * @param networkPacket which got received from the client
      */
-    public abstract void receiveNetworkPackage(Socket clientSocket, NetworkPackage networkPackage);
+    public abstract void receiveNetworkPackage(Socket clientSocket, NetworkPacket networkPacket);
 
     /**
      * Override this method to check if the client is loggedin or not
@@ -61,16 +61,16 @@ public abstract class Server {
     /**
      * Ovveride this method to handle "login"-Packages from a client
      * @param clientSocket the socket of the client which should get loggedin
-     * @param networkPackage the NetworkPackage which the client send
+     * @param networkPacket the NetworkPacket which the client send
      */
-    public void socketLogin(Socket clientSocket, NetworkPackage networkPackage) { }
+    public void socketLogin(Socket clientSocket, NetworkPacket networkPacket) { }
 
     /**
      * Ovveride this method to handle "logout"-Packages from a client
      * @param clientSocket the socket of the client which should get loggedin
-     * @param networkPackage the NetworkPackage which the client send
+     * @param networkPacket the NetworkPacket which the client send
      */
-    public void socketLogout(Socket clientSocket, NetworkPackage networkPackage) { }
+    public void socketLogout(Socket clientSocket, NetworkPacket networkPacket) { }
     //
 
     // Class methods
@@ -125,20 +125,21 @@ public abstract class Server {
                                 ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
                                 Object input = inputStream.readObject();
 
-                                if (input instanceof NetworkPackage) {
-                                    NetworkPackage networkPackage = (NetworkPackage) input;
-                                    if(networkPackage.getId().equalsIgnoreCase("client:login")) {
-                                        socketLogin(clientSocket, networkPackage);
-                                    } else if(networkPackage.getId().equalsIgnoreCase("client:logout")) {
-                                        socketLogout(clientSocket, networkPackage);
+                                if (input instanceof NetworkPacket) {
+                                    NetworkPacket networkPacket = (NetworkPacket) input;
+                                    if(networkPacket.getId().equalsIgnoreCase("client:login")) {
+                                        socketLogin(clientSocket, networkPacket);
+                                    } else if(networkPacket.getId().equalsIgnoreCase("client:logout")) {
+                                        socketLogout(clientSocket, networkPacket);
+                                        break; // We can break here, no new messages from the client
                                     } else if(isSocketValid(clientSocket)) {
-                                        receiveNetworkPackage(clientSocket, networkPackage);
-                                        runCallback(Callback.ON_NEW_NETPACKAGE, networkPackage);
+                                        receiveNetworkPackage(clientSocket, networkPacket);
+                                        runCallback(Callback.ON_NEW_NETPACKAGE, networkPacket);
 
                                         // Send back a Status
-                                        write(clientSocket, new NetworkPackage("STATUS", true));
+                                        write(clientSocket, new NetworkPacket("STATUS", true));
                                     } else {
-                                        write(clientSocket, new NetworkPackage("STATUS", false));
+                                        write(clientSocket, new NetworkPacket("STATUS", false));
                                     }
                                 }
                             } catch (IOException e) { // Client has disconnected
@@ -162,11 +163,11 @@ public abstract class Server {
     }
 
     /**
-     * Sends the client a new NetworkPackage, on which the client can react on
-     * @param clientSocket on which the NetworkPackage should get written
+     * Sends the client a new NetworkPacket, on which the client can react on
+     * @param clientSocket on which the NetworkPacket should get written
      * @param networkPackage which should get written on the Socket-Stream
      */
-    private void write(Socket clientSocket, NetworkPackage networkPackage){
+    private void write(Socket clientSocket, NetworkPacket networkPackage){
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
             outputStream.writeObject(networkPackage);

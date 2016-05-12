@@ -1,9 +1,7 @@
 package de.kuerzeder.stivik.SimpleNetworkLib.Tests;
 
 import de.kuerzeder.stivik.SimpleNetworkLib.Util.Callback;
-import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPackage;
-
-import java.util.Random;
+import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPacket;
 
 public class Main {
 
@@ -25,11 +23,11 @@ public class Main {
         });
         client.connect();
 
-        client.write(new NetworkPackage("TestPackage", "TestMSG"));
-        client.write(new NetworkPackage("TestPackage", new Random().nextFloat()));
-        client.write(new NetworkPackage("TestPackage", new Random().nextInt()));
-        client.write(new NetworkPackage("TestPackage", new Random().nextBoolean()));
-        client.write(new NetworkPackage("TestPackage", new Random().nextLong()));
+        client.write(new NetworkPacket("TestPackage", "TestMSG"));
+        client.write(new NetworkPacket("TestPackage", new Random().nextFloat()));
+        client.write(new NetworkPacket("TestPackage", new Random().nextInt()));
+        client.write(new NetworkPacket("TestPackage", new Random().nextBoolean()));
+        client.write(new NetworkPacket("TestPackage", new Random().nextLong()));
          */
 
         // Client disconnect + reconnect test (+ some clients which are connection for no porous)
@@ -47,7 +45,7 @@ public class Main {
         int i = 0;
         while(true){
             i++;
-            client.write(new NetworkPackage("TestPackage", "TestMSG"));
+            client.write(new NetworkPacket("TestPackage", "TestMSG"));
 
             if(i == 3)
                 client2.disconnect();
@@ -57,7 +55,7 @@ public class Main {
 
 
             if(i < 3 || i > 10)
-                client2.write(new NetworkPackage("TestPackage2", "TestMSG"));
+                client2.write(new NetworkPacket("TestPackage2", "TestMSG"));
 
             try {
                 Thread.sleep(1000);

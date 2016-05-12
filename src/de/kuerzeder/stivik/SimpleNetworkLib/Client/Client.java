@@ -45,10 +45,10 @@ public abstract class Client {
     public abstract void logout();
 
     /**
-     * Gets executed when receiving a new NetworkPackage
-     * @param networkPackage which got received from the Server
+     * Gets executed when receiving a new NetworkPacket
+     * @param networkPacket which got received from the Server
      */
-    public abstract void receiveNetworkPackage(NetworkPackage networkPackage);
+    public abstract void receiveNetworkPackage(NetworkPacket networkPacket);
     // END //
 
     // Class methods //
@@ -110,9 +110,9 @@ public abstract class Client {
                    ObjectInputStream inputStream = new ObjectInputStream(networkSocket.getInputStream());
                    Object input = inputStream.readObject();
 
-                   if(input instanceof NetworkPackage){
-                       receiveNetworkPackage((NetworkPackage) input);
-                       runCallback(Callback.ON_NEW_NETPACKAGE, (NetworkPackage) input);
+                   if(input instanceof NetworkPacket){
+                       receiveNetworkPackage((NetworkPacket) input);
+                       runCallback(Callback.ON_NEW_NETPACKAGE, (NetworkPacket) input);
                    }
                } catch (IOException  e) { // Socket is closed
                    Thread.currentThread().interrupt();
@@ -127,14 +127,14 @@ public abstract class Client {
     }
 
     /**
-     * Writes a new NetworkPackage on the (Client-)networkSocket,
+     * Writes a new NetworkPacket on the (Client-)networkSocket,
      * so the Server can read them and handle it
-     * @param networkPackage which should get written on the networkSocket-Stream
+     * @param networkPacket which should get written on the networkSocket-Stream
      */
-    public void write(NetworkPackage networkPackage){
+    public void write(NetworkPacket networkPacket){
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(networkSocket.getOutputStream());
-            outputStream.writeObject(networkPackage);
+            outputStream.writeObject(networkPacket);
         } catch (IOException e) {
             e.printStackTrace();
         }

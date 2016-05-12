@@ -10,12 +10,12 @@ import java.util.Collections;
  * @author Stefan Kürzeder
  *         created on 10.05.2016 in BY, Germany
  */
-public class NetworkPackage implements Serializable {
+public class NetworkPacket implements Serializable {
 
     private static final long serialVersionUID = 6658257544678633086L;
     private ArrayList<Object> netpack;
 
-    public NetworkPackage(String id, Object ...o){
+    public NetworkPacket(String id, Object ...o){
         netpack = new ArrayList<>();
         netpack.add(id);
         for (Object current : o) {
