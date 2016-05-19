@@ -1,7 +1,6 @@
 package de.kuerzeder.stivik.SimpleNetworkLib.Server;
 
 import de.kuerzeder.stivik.SimpleNetworkLib.Util.*;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -22,6 +21,7 @@ public abstract class Server {
     private boolean debugMode = false;
     private HashMap<Callback, Executable> callbacks;
     private Thread listeningThread = null;
+    private List<ServerListener> listeners = new ArrayList<>();
 
     public Server(int port, boolean debug) {
         this.debugMode = debug;
@@ -35,13 +35,13 @@ public abstract class Server {
      * Gets executed before the server realy gets started,
      * before the ServerSocket gets openend and the Server starts listening
      */
-    public abstract void preStart();
+    //public abstract void preStart();
 
     /**
      * Gets executed when the server has been started
      * and the server listening started
      */
-    public abstract void postStart();
+    //public abstract void postStart();
 
 
     /**
@@ -78,13 +78,13 @@ public abstract class Server {
      * Handles the starting of the Server (init Server-Socket, start listening, ...)
      */
     public void startServer(){
-        preStart();
+        dispatchEvent(EventType.ON_PRE_START, null);
         runCallback(Callback.ON_SYSTEM_MESSAGE, "[Info] Starting the Server!");
 
         initServer();
         listen();
 
-        postStart();
+        dispatchEvent(EventType.ON_POST_START, null);
     }
 
     /**
@@ -199,17 +199,33 @@ public abstract class Server {
             callback.run(arg);
         }
     }
+    //
 
-    /**
-     * Executes the callback Handler for an "Event"
-     * e.g. onConnected, onError, onMessage, ...
-     * @param callbackId (Callback Enum) on which Event this callback gets registered
-     * @TODO: 09.05.2016 make this function later private
-     */
-    public void runCallback(Callback callbackId) {
-        Executable callback = callbacks.get(callbackId);
-        if(callback != null) {
-            callback.run(null);
+    // Event Methods
+    public void addListener(ServerListener listener){
+        listeners.add(listener);
+    }
+
+    public void dispatchEvent(EventType type, Object arg){
+        for (ServerListener listener : listeners) {
+            switch (type) {
+                case ON_PRE_START:
+                    listener.preStart();
+                    break;
+                case ON_POST_START:
+                    listener.postStart();
+                    break;
+                case ON_MESSAGE:
+                    listener.onMessage(arg);
+                    break;
+                case ON_ERROR:
+                    listener.onError(arg);
+                    break;
+                default:
+                    listener.onError("[Error] Invalid Event '" + type.name() + "', cannot execute!");
+                    break;
+            }
         }
     }
+    //
 }
