@@ -49,7 +49,7 @@ public abstract class Server {
      * @param clientSocket the socket of client (to send back a message)
      * @param networkPacket which got received from the client
      */
-    public abstract void receiveNetworkPackage(Socket clientSocket, NetworkPacket networkPacket);
+    public abstract void receiveNetworkPacket(Socket clientSocket, NetworkPacket networkPacket);
 
     /**
      * Override this method to check if the client is loggedin or not
@@ -133,7 +133,7 @@ public abstract class Server {
                                         socketLogout(clientSocket, networkPacket);
                                         break; // We can break here, no new messages from the client
                                     } else if(isSocketValid(clientSocket)) {
-                                        receiveNetworkPackage(clientSocket, networkPacket);
+                                        receiveNetworkPacket(clientSocket, networkPacket);
                                         runCallback(Callback.ON_NEW_NETPACKAGE, networkPacket);
 
                                         // Send back a Status

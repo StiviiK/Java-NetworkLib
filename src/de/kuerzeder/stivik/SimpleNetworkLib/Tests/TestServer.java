@@ -57,7 +57,7 @@ public class TestServer extends Server implements ServerListener {
     }
 
     @Override
-    public void receiveNetworkPackage(Socket clientSocket, NetworkPacket networkPackage) {
-        System.out.println("Server: Socket[" + clientSocket.getInetAddress().toString() + "] -> NetworkPacket[" + networkPackage.getId() + ":" + networkPackage.get(1) + "]");
+    public void receiveNetworkPacket(Socket clientSocket, NetworkPacket networkPacket) {
+        System.out.println("Server: Socket[" + clientSocket.getInetAddress().toString() + "] -> NetworkPacket[" + networkPacket.getId() + ":" + networkPacket.get(1) + "]");
     }
 }

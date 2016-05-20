@@ -48,7 +48,7 @@ public abstract class Client {
      * Gets executed when receiving a new NetworkPacket
      * @param networkPacket which got received from the Server
      */
-    public abstract void receiveNetworkPackage(NetworkPacket networkPacket);
+    public abstract void receiveNetworkPacket(NetworkPacket networkPacket);
     // END //
 
     // Class methods //
@@ -111,7 +111,7 @@ public abstract class Client {
                    Object input = inputStream.readObject();
 
                    if(input instanceof NetworkPacket){
-                       receiveNetworkPackage((NetworkPacket) input);
+                       receiveNetworkPacket((NetworkPacket) input);
                        runCallback(Callback.ON_NEW_NETPACKAGE, (NetworkPacket) input);
                    }
                } catch (IOException  e) { // Socket is closed

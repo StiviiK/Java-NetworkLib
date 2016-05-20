@@ -5,32 +5,63 @@ A basic simple Libary for Java-Developers to provide Client, Server Applications
 To use this Libary, just download the JAR-File from "realeases" and include as external Libary to your Project.
 
 ## How to use the Server
+You have to create a new Class which extends Server and has to implement ServerListener (otherwise the supe.addListener won't work).
+You have to implement these Methods!
 ```java
-Server serverInstance = new Server(int port, boolean debug); // Create the Server instance
+public class TestServer extends Server implements ServerListener {
 
-// Register some important callbacks
-server.registerCallback(Callback.ON_SYSTEM_MESSAGE, (msg) -> {});
-server.registerCallback(Callback.ON_NEW_NETPACKAGE, (pack) -> {
-  final NetworkPackage networkPackage = (NetworkPackage) pack;
-  // Do something with the networkPackage
-});
-server.startServer(); // At least start the Server, so it listens on the given TCP-Port
+    public TestServer(int port, boolean debug) {
+        super(port, debug);
+        super.addListener(this);
+    }
+
+    // Listener Methods
+    @Override
+    public void preStart() {} // Gets called before the Server starts (Listener-Event)
+
+    @Override
+    public void postStart() {} // Gets called when the Server has started (Listener-Event)
+
+    @Override
+    public void onMessage(Object msg) {} // Gets called for a new Message (e.g. Debug) (Listener-Event)
+
+    @Override
+    public void onError(Object arg) {} // Gets called when an Error occures
+    //
+
+    @Override
+    public void socketLogin(Socket clientSocket, NetworkPacket networkPackage) {} // Gets executed when the client sends a "Login"-Packet, you have to handle this by your-self!
+
+    @Override
+    public void socketLogout(Socket clientSocket, NetworkPacket networkPackage) {} // Gets executed when the client sends a "Logout"-Packet, you have to handle this by your self! (The listening on this socket gets stopped!)
+
+    @Override
+    public boolean isSocketValid(Socket clientSocket) {
+        return true;
+    } // Gets executed to demitire if is client valid, use with socketLogin (implement check by your-self!)
+
+    @Override
+    public void receiveNetworkPacket(Socket clientSocket, NetworkPacket networkPacket) {} // Gets called when the Server receives a new Packet from the Client!
+}
 ```
 
 ## How to use the Client
+You have to create a new Class which extends Client, see here.
 ```java
-Client client = new Client(String host, int port, int timeout, boolean debug);
+public class TestClient extends Client {
 
-// Register some important callbacks
-client.registerCallback(Callback.ON_SYSTEM_MESSAGE, (msg) -> {});
-client.registerCallback(Callback.ON_NEW_NETPACKAGE, (pack) -> {
-  final NetworkPackage networkPackage = (NetworkPackage) pack;
-  // Do something with the networkPackage
-});
-client.connect(); // At least (try) to connect to the Server
+    public TestClient(String host, int port, int timeout, boolean debug) {
+        super(host, port, timeout, debug);
+    }
+
+    @Override
+    public void login() {} // Work in Progress
+
+
+    @Override
+    public void logout() {} // Work in Progress
+
+    @Override
+    public void receiveNetworkPackage(NetworkPacket networkPackage) {} // Gets called when the Client receives a new Packet from the Server!
+}
 ```
-
-## Todo
-- Add Login(), Logout() function -> so the Server can broadcast NetworkPackages to all clients
-- Fixe some @Todo's in the Code :P
-- Cleanup code

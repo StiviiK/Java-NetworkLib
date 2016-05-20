@@ -26,7 +26,7 @@ public class TestClient extends Client {
     }
 
     @Override
-    public void receiveNetworkPackage(NetworkPacket networkPackage) {
-        System.out.println("Client: NetworkPacket[" + networkPackage.getId() + ":" + networkPackage.get(1) + "]");
+    public void receiveNetworkPacket(NetworkPacket networkPacket) {
+        System.out.println("Client: NetworkPacket[" + networkPacket.getId() + ":" + networkPacket.get(1) + "]");
     }
 }
