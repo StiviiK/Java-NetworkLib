@@ -8,8 +8,6 @@ public class Main {
     public static void main(String[] args) {
 	// Only for testing, will be removed later on
         TestServer server = new TestServer(8612, true);
-        server.registerCallback(Callback.ON_SYSTEM_MESSAGE, (msg) -> System.out.println("SERVER: " + msg)); // To handle maybe via own MSG-System
-        server.registerCallback(Callback.ON_ERROR, (msg) -> System.err.println("SERVER: " + msg));
         server.startServer();
 
 
@@ -35,12 +33,12 @@ public class Main {
         client.connect();
         TestClient client2 = new TestClient("178.26.129.220", 8612, 0, true);
         client2.connect();
-        TestClient client3 = new TestClient("178.26.129.220", 8612, 0, true);
-        client3.connect();
-        TestClient client4 = new TestClient("178.26.129.220", 8612, 0, true);
-        client4.connect();
-        TestClient client5 = new TestClient("178.26.129.220", 8612, 0, true);
-        client5.connect();
+        //TestClient client3 = new TestClient("178.26.129.220", 8612, 0, true);
+        //client3.connect();
+        //TestClient client4 = new TestClient("178.26.129.220", 8612, 0, true);
+        //client4.connect();
+        //TestClient client5 = new TestClient("178.26.129.220", 8612, 0, true);
+        //client5.connect();
 
         int i = 0;
         while(true){

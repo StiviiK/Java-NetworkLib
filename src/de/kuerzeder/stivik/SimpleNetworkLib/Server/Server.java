@@ -78,13 +78,13 @@ public abstract class Server {
      * Handles the starting of the Server (init Server-Socket, start listening, ...)
      */
     public void startServer(){
-        dispatchEvent(EventType.ON_PRE_START, null);
-        runCallback(Callback.ON_SYSTEM_MESSAGE, "[Info] Starting the Server!");
+        dispatchEvent(EventType.ON_PRE_START);
+        dispatchEvent(EventType.ON_MESSAGE, "[Info] Starting the Server!");
 
         initServer();
         listen();
 
-        dispatchEvent(EventType.ON_POST_START, null);
+        dispatchEvent(EventType.ON_POST_START);
     }
 
     /**
@@ -94,10 +94,10 @@ public abstract class Server {
         if(serverSocket == null) {
             try {
                 serverSocket = new ServerSocket(this.port);
-                runCallback(Callback.ON_SYSTEM_MESSAGE, "[Info] Trying to resolve Address");
+                dispatchEvent(EventType.ON_MESSAGE, "[Info] Trying to resolve Address");
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(new URL("http://bot.whatismyipaddress.com/").openStream()));
-                    runCallback(Callback.ON_SYSTEM_MESSAGE, "[Info] Bound to Address " + in.readLine() + ":" + serverSocket.getLocalPort());
+                    dispatchEvent(EventType.ON_MESSAGE, "[Info] Bound to Address " + in.readLine() + ":" + serverSocket.getLocalPort());
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
                 }
@@ -134,7 +134,6 @@ public abstract class Server {
                                         break; // We can break here, no new messages from the client
                                     } else if(isSocketValid(clientSocket)) {
                                         receiveNetworkPacket(clientSocket, networkPacket);
-                                        runCallback(Callback.ON_NEW_NETPACKAGE, networkPacket);
 
                                         // Send back a Status
                                         write(clientSocket, new NetworkPacket("STATUS", true));
@@ -175,30 +174,6 @@ public abstract class Server {
             e.printStackTrace();
         }
     }
-
-    /**
-     * Registers a new callback handler, to handle some "Events"
-     * e.g. onConnected, onError, onMessage, ...
-     * @param callbackId (Callback Enum) on which Event this callback gets registered
-     * @param callback an executable which gets executed on a certain event
-     */
-    public void registerCallback(Callback callbackId, Executable callback) {
-        callbacks.put(callbackId, callback);
-    }
-
-    /**
-     * Executes the callback Handler for an "Event"
-     * e.g. onConnected, onError, onMessage, ...
-     * @param callbackId (Callback Enum) on which Event this callback gets registered
-     * @param arg an Object (Argument) which can be provided to the executable
-     * @TODO: 09.05.2016 make this function later private
-     */
-    public void runCallback(Callback callbackId, Object arg) {
-        Executable callback = callbacks.get(callbackId);
-        if(callback != null) {
-            callback.run(arg);
-        }
-    }
     //
 
     // Event Methods
@@ -226,6 +201,10 @@ public abstract class Server {
                     break;
             }
         }
+    }
+
+    public void dispatchEvent(EventType type){
+        dispatchEvent(type, null);
     }
     //
 }

@@ -1,5 +1,6 @@
 package de.kuerzeder.stivik.SimpleNetworkLib.Client;
 
+import de.kuerzeder.stivik.SimpleNetworkLib.Server.ServerListener;
 import de.kuerzeder.stivik.SimpleNetworkLib.Util.*;
 
 import java.io.IOException;
@@ -8,7 +9,9 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.AlreadyConnectedException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * SimpleNetworkLib: A simple Client class for Network Communication
@@ -24,6 +27,7 @@ public abstract class Client {
     private HashMap<Callback, Executable> callbacks;
     private boolean isLoggedin = false;
     private Thread listeningThread = null;
+    private List<ClientListener> listeners = new ArrayList<>();
 
     public Client(String host, int port, int timeout, boolean debug) {
         this.debugMode  = debug;
@@ -64,19 +68,19 @@ public abstract class Client {
                 throw new AlreadyConnectedException();
             }
 
-            runCallback(Callback.ON_SYSTEM_MESSAGE, "[Info] Connected successfull to the Server(-Socket) on " + this.remoteHost.toString());
-            runCallback(Callback.CLIENT_ON_CONNECTED);
+            dispatchEvent(EventType.ON_MESSAGE, "[Info] Connected successfull to the Server(-Socket) on " + this.remoteHost.toString());
+            dispatchEvent(EventType.ON_CONNECTED);
 
             // Start listening
             listen();
         } catch (IOException | AlreadyConnectedException e) {
             if(this.debugMode) {
                 e.printStackTrace();
-                System.err.println("[Error] Connection to the Server(-Socket) failed. See StackTrace.");
+                dispatchEvent(EventType.ON_ERROR, "[Error] Connection to the Server(-Socket) failed. See StackTrace.");
             } else {
-                System.err.println("[Error] Connection to the Server(-Socket) failed. (enable debug-mode, for stacktrace)");
+                dispatchEvent(EventType.ON_ERROR, "[Error] Connection to the Server(-Socket) failed. (enable debug-mode, for stacktrace)");
             }
-            runCallback(Callback.ON_ERROR, e.getLocalizedMessage());
+            dispatchEvent(EventType.ON_ERROR, e.getLocalizedMessage());
         }
     }
 
@@ -112,7 +116,6 @@ public abstract class Client {
 
                    if(input instanceof NetworkPacket){
                        receiveNetworkPacket((NetworkPacket) input);
-                       runCallback(Callback.ON_NEW_NETPACKAGE, (NetworkPacket) input);
                    }
                } catch (IOException  e) { // Socket is closed
                    Thread.currentThread().interrupt();
@@ -139,42 +142,34 @@ public abstract class Client {
             e.printStackTrace();
         }
     }
+    //
 
-    /**
-     * Registers a new callback handler, to handle some "Events"
-     * e.g. onConnected, onError, onMessage, ...
-     * @param callbackId (Callback Enum) on which Event this callback gets registered
-     * @param callback an executable which gets executed on a certain event
-     */
-    public void registerCallback(Callback callbackId, Executable callback) {
-        callbacks.put(callbackId, callback);
+    // Event Methods
+    public void addListener(ClientListener listener){
+        listeners.add(listener);
     }
 
-    /**
-     * Executes the callback Handler for an "Event"
-     * e.g. onConnected, onError, onMessage, ...
-     * @param callbackId (Callback Enum) on which Event this callback gets registered
-     * @param arg an Object (Argument) which can be provided to the executable
-     * @TODO: 09.05.2016 make this function later private
-     */
-    public void runCallback(Callback callbackId, Object arg) {
-        Executable callback = callbacks.get(callbackId);
-        if(callback != null) {
-            callback.run(arg);
+    public void dispatchEvent(EventType type, Object arg){
+        for (ClientListener listener : listeners) {
+            switch (type) {
+                case ON_MESSAGE:
+                    listener.onMessage(arg);
+                    break;
+                case ON_ERROR:
+                    listener.onError(arg);
+                    break;
+                case ON_CONNECTED:
+                    listener.onConnected();
+                    break;
+                default:
+                    listener.onError("[Error] Invalid Event '" + type.name() + "', cannot execute!");
+                    break;
+            }
         }
     }
 
-    /**
-     * Executes the callback Handler for an "Event"
-     * e.g. onConnected, onError, onMessage, ...
-     * @param callbackId (Callback Enum) on which Event this callback gets registered
-     * @TODO: 09.05.2016 make this function later private
-     */
-    public void runCallback(Callback callbackId) {
-        Executable callback = callbacks.get(callbackId);
-        if(callback != null) {
-            callback.run(null);
-        }
+    public void dispatchEvent(EventType type){
+        dispatchEvent(type, null);
     }
-    // END //
+    //
 }

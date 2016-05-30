@@ -7,5 +7,6 @@ package de.kuerzeder.stivik.SimpleNetworkLib.Util;
  */
 public enum EventType {
     ON_ERROR, ON_MESSAGE, // NetListener
-    ON_PRE_START, ON_POST_START //ServerListener
+    ON_PRE_START, ON_POST_START, //ServerListener
+    ON_CONNECTED // ClientListener
 }
