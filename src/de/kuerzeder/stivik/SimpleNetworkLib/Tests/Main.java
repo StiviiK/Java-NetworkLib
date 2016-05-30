@@ -1,6 +1,5 @@
 package de.kuerzeder.stivik.SimpleNetworkLib.Tests;
 
-import de.kuerzeder.stivik.SimpleNetworkLib.Util.Callback;
 import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPacket;
 
 public class Main {
@@ -9,7 +8,6 @@ public class Main {
 	// Only for testing, will be removed later on
         TestServer server = new TestServer(8612, true);
         server.startServer();
-
 
         /**
         TestClient client = new TestClient("STEFAN-PC", 8612, 0, true);

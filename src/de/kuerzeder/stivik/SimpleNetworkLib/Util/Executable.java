@@ -14,5 +14,5 @@ public interface Executable {
      * (From: https://github.com/DeBukkIt/SimpleServerClient/blob/master/com/blogspot/debukkitsblog/Util/Executable.java)
      * @param o the Object to work with
      */
-    public abstract void run(Object o);
+    void run(Object o);
 }

@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.AlreadyConnectedException;
+import java.nio.channels.NotYetConnectedException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +25,6 @@ public abstract class Client {
     private InetSocketAddress remoteHost;
     private int timeout;
     private Socket networkSocket;
-    private HashMap<Callback, Executable> callbacks;
     private boolean isLoggedin = false;
     private Thread listeningThread = null;
     private List<ClientListener> listeners = new ArrayList<>();
@@ -34,7 +34,6 @@ public abstract class Client {
 
         this.remoteHost = new InetSocketAddress(host, port);
         this.timeout    = timeout;
-        this.callbacks  = new HashMap<>();
     }
 
     // Abstract methods //
@@ -136,9 +135,13 @@ public abstract class Client {
      */
     public void write(NetworkPacket networkPacket){
         try {
-            ObjectOutputStream outputStream = new ObjectOutputStream(networkSocket.getOutputStream());
-            outputStream.writeObject(networkPacket);
-        } catch (IOException e) {
+            if(networkSocket != null && networkSocket.isConnected() && !networkSocket.isClosed()) {
+                ObjectOutputStream outputStream = new ObjectOutputStream(networkSocket.getOutputStream());
+                outputStream.writeObject(networkPacket);
+            } else {
+                throw new NotYetConnectedException();
+            }
+        } catch (IOException | NotYetConnectedException e) {
             e.printStackTrace();
         }
     }

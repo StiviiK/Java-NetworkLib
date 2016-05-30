@@ -19,7 +19,6 @@ public abstract class Server {
     private ServerSocket serverSocket;
     private int port;
     private boolean debugMode = false;
-    private HashMap<Callback, Executable> callbacks;
     private Thread listeningThread = null;
     private List<ServerListener> listeners = new ArrayList<>();
 
@@ -27,7 +26,6 @@ public abstract class Server {
         this.debugMode = debug;
 
         this.port = port;
-        this.callbacks = new HashMap<>();
     }
 
     // Abstract methods
@@ -166,7 +164,7 @@ public abstract class Server {
      * @param clientSocket on which the NetworkPacket should get written
      * @param networkPackage which should get written on the Socket-Stream
      */
-    private void write(Socket clientSocket, NetworkPacket networkPackage){
+    public void write(Socket clientSocket, NetworkPacket networkPackage){
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
             outputStream.writeObject(networkPackage);
