@@ -70,8 +70,9 @@ public abstract class Client {
             dispatchEvent(EventType.ON_MESSAGE, "[Info] Connected successfull to the Server(-Socket) on " + this.remoteHost.toString());
             dispatchEvent(EventType.ON_CONNECTED);
 
-            // Start listening
+            // Start listening && Login to the Server
             listen();
+            login();
         } catch (IOException | AlreadyConnectedException e) {
             if(this.debugMode) {
                 e.printStackTrace();
@@ -87,12 +88,15 @@ public abstract class Client {
      * Closes the connection to the server and closes the networkSocket
      */
     public void disconnect(){
+        logout();
+
         if(listeningThread != null) {
             listeningThread.interrupt();
         }
         if(networkSocket != null && networkSocket.isConnected()) {
             try {
                 networkSocket.close();
+                dispatchEvent(EventType.ON_DISCONNECTED);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -143,16 +147,17 @@ public abstract class Client {
             }
         } catch (IOException | NotYetConnectedException e) {
             e.printStackTrace();
+            dispatchEvent(EventType.ON_CONNECTION_LOST);
         }
     }
     //
 
     // Event Methods
-    public void addListener(ClientListener listener){
+    protected void addListener(ClientListener listener){
         listeners.add(listener);
     }
 
-    public void dispatchEvent(EventType type, Object arg){
+    private void dispatchEvent(EventType type, Object arg){
         for (ClientListener listener : listeners) {
             switch (type) {
                 case ON_MESSAGE:
@@ -164,6 +169,12 @@ public abstract class Client {
                 case ON_CONNECTED:
                     listener.onConnected();
                     break;
+                case ON_DISCONNECTED:
+                    listener.onDisconnect();
+                    break;
+                case ON_CONNECTION_LOST:
+                    listener.onConnectionLost();
+                    break;
                 default:
                     listener.onError("[Error] Invalid Event '" + type.name() + "', cannot execute!");
                     break;
@@ -171,7 +182,7 @@ public abstract class Client {
         }
     }
 
-    public void dispatchEvent(EventType type){
+    private void dispatchEvent(EventType type){
         dispatchEvent(type, null);
     }
     //

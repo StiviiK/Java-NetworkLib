@@ -5,6 +5,7 @@ import de.kuerzeder.stivik.SimpleNetworkLib.Server.ServerListener;
 import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPacket;
 
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * SimpleNetworkLib:
@@ -12,6 +13,8 @@ import java.net.Socket;
  * created on 11.05.2016 in BY, Germany
  */
 public class TestServer extends Server implements ServerListener {
+    private ArrayList<Socket> validSockets = new ArrayList<>();
+
 
     public TestServer(int port, boolean debug) {
         super(port, debug);
@@ -42,17 +45,19 @@ public class TestServer extends Server implements ServerListener {
 
     @Override
     public void socketLogin(Socket clientSocket, NetworkPacket networkPackage) {
-
+        System.err.println("New Login!");
+        validSockets.add(clientSocket);
     }
 
     @Override
     public void socketLogout(Socket clientSocket, NetworkPacket networkPackage) {
-
+        System.err.println("New Logout!");
+        validSockets.remove(clientSocket);
     }
 
     @Override
     public boolean isSocketValid(Socket clientSocket) {
-        return true;
+        return validSockets.indexOf(clientSocket) != -1;
     }
 
     @Override

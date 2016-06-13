@@ -125,18 +125,18 @@ public abstract class Server {
 
                                 if (input instanceof NetworkPacket) {
                                     NetworkPacket networkPacket = (NetworkPacket) input;
-                                    if(networkPacket.getId().equalsIgnoreCase("client:login")) {
+                                    if(networkPacket.getId().equalsIgnoreCase(Util.CLIENT_LOGIN_PACKAGE)) {
                                         socketLogin(clientSocket, networkPacket);
-                                    } else if(networkPacket.getId().equalsIgnoreCase("client:logout")) {
+                                    } else if(networkPacket.getId().equalsIgnoreCase(Util.CLIENT_LOGOUT_PACKAGE)) {
                                         socketLogout(clientSocket, networkPacket);
                                         break; // We can break here, no new messages from the client
                                     } else if(isSocketValid(clientSocket)) {
                                         receiveNetworkPacket(clientSocket, networkPacket);
 
                                         // Send back a Status
-                                        write(clientSocket, new NetworkPacket("STATUS", true));
+                                        write(clientSocket, new NetworkPacket(Util.REPLY_STATUS, true));
                                     } else {
-                                        write(clientSocket, new NetworkPacket("STATUS", false));
+                                        write(clientSocket, new NetworkPacket(Util.REPLY_STATUS, false));
                                     }
                                 }
                             } catch (IOException e) { // Client has disconnected
@@ -164,7 +164,7 @@ public abstract class Server {
      * @param clientSocket on which the NetworkPacket should get written
      * @param networkPackage which should get written on the Socket-Stream
      */
-    public void write(Socket clientSocket, NetworkPacket networkPackage){
+    private void write(Socket clientSocket, NetworkPacket networkPackage){
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
             outputStream.writeObject(networkPackage);
@@ -175,11 +175,11 @@ public abstract class Server {
     //
 
     // Event Methods
-    public void addListener(ServerListener listener){
+    protected void addListener(ServerListener listener){
         listeners.add(listener);
     }
 
-    public void dispatchEvent(EventType type, Object arg){
+    private void dispatchEvent(EventType type, Object arg){
         for (ServerListener listener : listeners) {
             switch (type) {
                 case ON_PRE_START:
@@ -201,7 +201,7 @@ public abstract class Server {
         }
     }
 
-    public void dispatchEvent(EventType type){
+    private void dispatchEvent(EventType type){
         dispatchEvent(type, null);
     }
     //

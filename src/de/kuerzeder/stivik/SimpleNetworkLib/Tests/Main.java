@@ -5,7 +5,7 @@ import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPacket;
 public class Main {
 
     public static void main(String[] args) {
-	// Only for testing, will be removed later on
+        // Only for testing, will be removed later on
         TestServer server = new TestServer(8612, true);
         server.startServer();
 

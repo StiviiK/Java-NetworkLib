@@ -3,6 +3,7 @@ package de.kuerzeder.stivik.SimpleNetworkLib.Tests;
 import de.kuerzeder.stivik.SimpleNetworkLib.Client.Client;
 import de.kuerzeder.stivik.SimpleNetworkLib.Client.ClientListener;
 import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPacket;
+import de.kuerzeder.stivik.SimpleNetworkLib.Util.Util;
 
 /**
  * SimpleNetworkLib:
@@ -17,11 +18,14 @@ public class TestClient extends Client implements ClientListener {
     }
 
     @Override
-    public void login() { }
-
+    public void login() {
+        //write(new NetworkPacket(Util.CLIENT_LOGIN_PACKAGE, ""));
+    }
 
     @Override
-    public void logout() { }
+    public void logout() {
+        //write(new NetworkPacket(Util.CLIENT_LOGOUT_PACKAGE, ""));
+    }
 
     @Override
     public void receiveNetworkPacket(NetworkPacket networkPacket) {
