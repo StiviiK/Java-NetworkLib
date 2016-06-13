@@ -13,8 +13,8 @@ import java.util.ArrayList;
  * created on 11.05.2016 in BY, Germany
  */
 public class TestServer extends Server implements ServerListener {
-    private ArrayList<Socket> validSockets = new ArrayList<>();
 
+    private ArrayList<Socket> validSockets = new ArrayList<>();
 
     public TestServer(int port, boolean debug) {
         super(port, debug);

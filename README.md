@@ -10,6 +10,8 @@ You have to implement these Methods!
 ```java
 public class TestServer extends Server implements ServerListener {
 
+    private ArrayList<Socket> validSockets = new ArrayList<>();
+
     public TestServer(int port, boolean debug) {
         super(port, debug);
         super.addListener(this);
@@ -17,51 +19,94 @@ public class TestServer extends Server implements ServerListener {
 
     // Listener Methods
     @Override
-    public void preStart() {} // Gets called before the Server starts (Listener-Event)
+    public void preStart() {
+        System.out.println("SERVER: [Info] pre-Start!");
+    }
 
     @Override
-    public void postStart() {} // Gets called when the Server has started (Listener-Event)
+    public void postStart() {
+        System.out.println("SERVER: [Info] post-Start!");
+    }
 
     @Override
-    public void onMessage(Object msg) {} // Gets called for a new Message (e.g. Debug) (Listener-Event)
+    public void onMessage(Object msg) {
+        System.out.println("SERVER: " + msg);
+    }
 
     @Override
-    public void onError(Object arg) {} // Gets called when an Error occures
+    public void onError(Object arg) {
+        System.err.println("SERVER: " + arg);
+    }
     //
 
     @Override
-    public void socketLogin(Socket clientSocket, NetworkPacket networkPackage) {} // Gets executed when the client sends a "Login"-Packet, you have to handle this by your-self!
+    public void socketLogin(Socket clientSocket, NetworkPacket networkPackage) {
+        System.err.println("New Login!");
+        validSockets.add(clientSocket);
+    }
 
     @Override
-    public void socketLogout(Socket clientSocket, NetworkPacket networkPackage) {} // Gets executed when the client sends a "Logout"-Packet, you have to handle this by your self! (The listening on this socket gets stopped!)
+    public void socketLogout(Socket clientSocket, NetworkPacket networkPackage) {
+        System.err.println("New Logout!");
+        validSockets.remove(clientSocket);
+    }
 
     @Override
     public boolean isSocketValid(Socket clientSocket) {
-        return true;
-    } // Gets executed to demitire if is client valid, use with socketLogin (implement check by your-self!)
+        return validSockets.indexOf(clientSocket) != -1;
+    }
 
     @Override
-    public void receiveNetworkPacket(Socket clientSocket, NetworkPacket networkPacket) {} // Gets called when the Server receives a new Packet from the Client!
+    public void receiveNetworkPacket(Socket clientSocket, NetworkPacket networkPacket) {
+        System.out.println("Server: Socket[" + clientSocket.getInetAddress().toString() + "] -> NetworkPacket[" + networkPacket.getId() + ":" + networkPacket.get(1) + "]");
+    }
 }
 ```
 
 ## How to use the Client
-You have to create a new Class which extends Client, see here.
+You have to create a new Class which extends Client and has to implement ServerListener (otherwise the supe.addListener won't work), see here.
 ```java
-public class TestClient extends Client {
+public class TestClient extends Client implements ClientListener {
 
     public TestClient(String host, int port, int timeout, boolean debug) {
         super(host, port, timeout, debug);
+        super.addListener(this);
     }
 
     @Override
-    public void login() {} // Work in Progress
-
+    public void login() {
+        //super.write() what you like more, its the same
+        write(new NetworkPacket(Util.CLIENT_LOGIN_PACKAGE, ""));
+    }
 
     @Override
-    public void logout() {} // Work in Progress
+    public void logout() {
+        //super.write() what you like more, its the same
+        write(new NetworkPacket(Util.CLIENT_LOGOUT_PACKAGE, ""));
+    }
 
     @Override
-    public void receiveNetworkPackage(NetworkPacket networkPackage) {} // Gets called when the Client receives a new Packet from the Server!
+    public void receiveNetworkPacket(NetworkPacket networkPacket) {
+        System.out.println("Client: NetworkPacket[" + networkPacket.getId() + ":" + networkPacket.get(1) + "]");
+    }
+
+    @Override
+    public void onMessage(Object msg) {
+        System.out.println("CLIENT: " + msg);
+    }
+
+    @Override
+    public void onError(Object msg) {
+        System.err.println("CLIENT: " + msg);
+    }
+
+    @Override
+    public void onConnected() { }
+
+    @Override
+    public void onDisconnect() { }
+
+    @Override
+    public void onConnectionLost() { }
 }
 ```
