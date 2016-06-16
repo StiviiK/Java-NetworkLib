@@ -6,9 +6,8 @@ import java.util.Collections;
 
 /**
  * SimpleNetworkLib:
- *
  * @author Stefan Kürzeder
- *         created on 10.05.2016 in BY, Germany
+ * created on 10.05.2016 in BY, Germany
  */
 public class NetworkPacket implements Serializable {
 

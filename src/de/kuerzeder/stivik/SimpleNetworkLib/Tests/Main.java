@@ -55,7 +55,6 @@ public class Main {
 
             try {
                 Thread.sleep(1000);
-                continue;
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 break;

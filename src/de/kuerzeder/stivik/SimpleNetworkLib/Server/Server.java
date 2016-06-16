@@ -18,13 +18,13 @@ public abstract class Server {
 
     private ServerSocket serverSocket;
     private int port;
-    private boolean debugMode = false;
-    private Thread listeningThread = null;
-    private List<ServerListener> listeners = new ArrayList<>();
+    private boolean debugMode;
+    private Thread listeningThread;
+    private List<ServerListener> listeners;
 
     public Server(int port, boolean debug) {
         this.debugMode = debug;
-
+        this.listeners = new ArrayList<>();
         this.port = port;
     }
 
@@ -125,18 +125,18 @@ public abstract class Server {
 
                                 if (input instanceof NetworkPacket) {
                                     NetworkPacket networkPacket = (NetworkPacket) input;
-                                    if(networkPacket.getId().equalsIgnoreCase(Util.CLIENT_LOGIN_PACKAGE)) {
+                                    if(networkPacket.getId().equals(NetworkPacketId.CLIENT_LOGIN.getId())) {
                                         socketLogin(clientSocket, networkPacket);
-                                    } else if(networkPacket.getId().equalsIgnoreCase(Util.CLIENT_LOGOUT_PACKAGE)) {
+                                    } else if(networkPacket.getId().equals(NetworkPacketId.CLIENT_LOGOUT.getId())) {
                                         socketLogout(clientSocket, networkPacket);
                                         break; // We can break here, no new messages from the client
                                     } else if(isSocketValid(clientSocket)) {
                                         receiveNetworkPacket(clientSocket, networkPacket);
 
                                         // Send back a Status
-                                        write(clientSocket, new NetworkPacket(Util.REPLY_STATUS, true));
+                                        write(clientSocket, new NetworkPacket(NetworkPacketId.REPLY_STATUS.getId(), true));
                                     } else {
-                                        write(clientSocket, new NetworkPacket(Util.REPLY_STATUS, false));
+                                        write(clientSocket, new NetworkPacket(NetworkPacketId.REPLY_STATUS.getId(), false));
                                     }
                                 }
                             } catch (IOException e) { // Client has disconnected

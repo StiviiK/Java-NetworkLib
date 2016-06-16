@@ -21,17 +21,17 @@ import java.util.List;
  */
 public abstract class Client {
 
-    private boolean debugMode = false;
+    private boolean debugMode;
     private InetSocketAddress remoteHost;
     private int timeout;
     private Socket networkSocket;
-    private boolean isLoggedin = false;
-    private Thread listeningThread = null;
-    private List<ClientListener> listeners = new ArrayList<>();
+    private boolean isLoggedin;
+    private Thread listeningThread;
+    private List<ClientListener> listeners;
 
     public Client(String host, int port, int timeout, boolean debug) {
         this.debugMode  = debug;
-
+        this.listeners  = new ArrayList<>();
         this.remoteHost = new InetSocketAddress(host, port);
         this.timeout    = timeout;
     }
