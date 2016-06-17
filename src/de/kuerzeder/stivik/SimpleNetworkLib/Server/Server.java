@@ -57,14 +57,14 @@ public abstract class Server {
     public boolean isSocketValid(Socket clientSocket) { return true; }
 
     /**
-     * Ovveride this method to handle "login"-Packages from a client
+     * Override this method to handle "login"-Packages from a client
      * @param clientSocket the socket of the client which should get loggedin
      * @param networkPacket the NetworkPacket which the client send
      */
     public void socketLogin(Socket clientSocket, NetworkPacket networkPacket) { }
 
     /**
-     * Ovveride this method to handle "logout"-Packages from a client
+     * Override this method to handle "logout"-Packages from a client
      * @param clientSocket the socket of the client which should get loggedin
      * @param networkPacket the NetworkPacket which the client send
      */
@@ -130,6 +130,8 @@ public abstract class Server {
                                     } else if(networkPacket.getId().equals(NetworkPacketId.CLIENT_LOGOUT.getId())) {
                                         socketLogout(clientSocket, networkPacket);
                                         break; // We can break here, no new messages from the client
+                                    } else if(networkPacket.getId().equals(NetworkPacketId.PING_STATUS.getId())) {
+                                        write(clientSocket, new NetworkPacket(NetworkPacketId.PING_REPLY.getId(), true));
                                     } else if(isSocketValid(clientSocket)) {
                                         receiveNetworkPacket(clientSocket, networkPacket);
 

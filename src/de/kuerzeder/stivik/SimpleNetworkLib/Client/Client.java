@@ -1,18 +1,15 @@
 package de.kuerzeder.stivik.SimpleNetworkLib.Client;
 
-import de.kuerzeder.stivik.SimpleNetworkLib.Server.ServerListener;
 import de.kuerzeder.stivik.SimpleNetworkLib.Util.*;
-
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.channels.AlreadyConnectedException;
 import java.nio.channels.NotYetConnectedException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * SimpleNetworkLib: A simple Client class for Network Communication
@@ -28,6 +25,11 @@ public abstract class Client {
     private boolean isLoggedin;
     private Thread listeningThread;
     private List<ClientListener> listeners;
+    private Thread pingThread;
+
+    // Ping
+    private Long lastPing;
+    private Date lastPingTest;
 
     public Client(String host, int port, int timeout, boolean debug) {
         this.debugMode  = debug;
@@ -74,7 +76,7 @@ public abstract class Client {
             listen();
             login();
         } catch (IOException | AlreadyConnectedException e) {
-            if(this.debugMode) {
+            if(debugMode) {
                 e.printStackTrace();
                 dispatchEvent(EventType.ON_ERROR, "[Error] Connection to the Server(-Socket) failed. See StackTrace.");
             } else {
@@ -90,6 +92,9 @@ public abstract class Client {
     public void disconnect(){
         logout();
 
+        if(pingThread != null) {
+            pingThread.interrupt();
+        }
         if(listeningThread != null) {
             listeningThread.interrupt();
         }
@@ -117,14 +122,21 @@ public abstract class Client {
                    ObjectInputStream inputStream = new ObjectInputStream(networkSocket.getInputStream());
                    Object input = inputStream.readObject();
 
-                   if(input instanceof NetworkPacket){
-                       receiveNetworkPacket((NetworkPacket) input);
+                   if (input instanceof NetworkPacket) {
+                       NetworkPacket networkPacket = (NetworkPacket) input;
+                       if(networkPacket.getId().equals(NetworkPacketId.PING_REPLY.getId())) {
+                           onPingReply();
+                       } else {
+                           receiveNetworkPacket(networkPacket);
+                       }
+                   } else {
+                       throw new InvalidClassException("Input is not an instanceof NetworkPacket");
                    }
+               } catch (InvalidClassException | ClassNotFoundException e) {
+                   e.printStackTrace();
                } catch (IOException  e) { // Socket is closed
                    Thread.currentThread().interrupt();
                    break;
-               } catch (ClassNotFoundException e) {
-                   e.printStackTrace();
                }
            }
         });
@@ -149,6 +161,44 @@ public abstract class Client {
             e.printStackTrace();
             dispatchEvent(EventType.ON_CONNECTION_LOST);
         }
+    }
+
+    /**
+     * Starts a new Ping-Test, to capture the latency between
+     * Client and Server (Client -> Server -> Client), also to
+     * check if the connection is still alive.
+     */
+    public void startPingTest(){
+        if(pingThread == null) {
+            pingThread = new Thread(() -> {
+                while (true) {
+                    try {Thread.sleep(3 * 1000);} catch (InterruptedException ignored) {}
+
+                    if(networkSocket != null && networkSocket.isConnected() && !networkSocket.isClosed()) {
+                        lastPingTest = Calendar.getInstance().getTime();
+                        write(new NetworkPacket(NetworkPacketId.PING_STATUS.getId(), true));
+                    }
+                }
+            });
+            pingThread.start();
+        }
+    }
+
+    /**
+     * Is the "hidden" Callback handler for an Ping-Reply Package
+     * from the Server. It sets the lastPing value.
+     */
+    private void onPingReply(){
+        lastPing = (Calendar.getInstance().getTime().getTime() - lastPingTest.getTime());
+    }
+
+    /**
+     * Returns the lastPing latency between the Client and the Server.
+     * Gets update all ~3000ms (+ Latency).
+     * @return the last captured ping value
+     */
+    public long getPing(){
+        return lastPing != null ? lastPing : -1;
     }
     //
 

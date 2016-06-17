@@ -43,7 +43,9 @@ public class TestClient extends Client implements ClientListener {
     }
 
     @Override
-    public void onConnected() { }
+    public void onConnected() {
+        super.startPingTest();
+    }
 
     @Override
     public void onDisconnect() { }
