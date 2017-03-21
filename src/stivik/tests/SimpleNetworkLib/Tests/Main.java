@@ -1,18 +1,18 @@
-package de.kuerzeder.stivik.SimpleNetworkLib.Tests;
+package stivik.tests.SimpleNetworkLib.Tests;
 
-import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPacket;
+import stivik.SimpleNetworkLib.Util.NetworkPacket;
 
 public class Main {
 
     public static void main(String[] args) {
         // Only for testing, will be removed later on
-        TestServer server = new TestServer(8612, true);
+        TestServer server = new TestServer(998);
         server.startServer();
 
         // Client disconnect + reconnect test (+ some clients which are connection for no porous)
-        TestClient client = new TestClient("178.26.129.220", 8612, 0, true);
+        TestClient client = new TestClient("localhost", 998, 0, true);
         client.connect();
-        TestClient client2 = new TestClient("178.26.129.220", 8612, 0, true);
+        TestClient client2 = new TestClient("localhost", 998, 0, true);
         client2.connect();
 
         int i = 0;

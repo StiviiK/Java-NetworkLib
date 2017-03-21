@@ -1,4 +1,4 @@
-package de.kuerzeder.stivik.SimpleNetworkLib.Util;
+package stivik.SimpleNetworkLib.Util;
 
 import java.io.Serializable;
 import java.util.ArrayList;

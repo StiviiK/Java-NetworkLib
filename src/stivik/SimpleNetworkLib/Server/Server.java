@@ -1,6 +1,9 @@
-package de.kuerzeder.stivik.SimpleNetworkLib.Server;
+package stivik.SimpleNetworkLib.Server;
 
-import de.kuerzeder.stivik.SimpleNetworkLib.Util.*;
+import stivik.SimpleNetworkLib.Util.EventType;
+import stivik.SimpleNetworkLib.Util.NetworkPacket;
+import stivik.SimpleNetworkLib.Util.NetworkPacketId;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,16 +19,12 @@ import java.util.*;
  */
 public abstract class Server {
 
-    private ServerSocket serverSocket;
-    private int port;
-    private boolean debugMode;
-    private Thread listeningThread;
-    private List<ServerListener> listeners;
+    private ServerSocket s_Socket;
+    private int m_Port;
+    private List<ServerListener> s_EventListeners = new ArrayList<>();
 
-    public Server(int port, boolean debug) {
-        this.debugMode = debug;
-        this.listeners = new ArrayList<>();
-        this.port = port;
+    public Server(int port) {
+        m_Port = port;
     }
 
     // Abstract methods
@@ -44,28 +43,28 @@ public abstract class Server {
 
     /**
      * Gets executed when receiving a new NetworkPacket from a client
-     * @param clientSocket the socket of client (to send back a message)
+     * @param clientSocket the s_Socket of client (to send back a message)
      * @param networkPacket which got received from the client
      */
     public abstract void receiveNetworkPacket(Socket clientSocket, NetworkPacket networkPacket);
 
     /**
      * Override this method to check if the client is loggedin or not
-     * @param clientSocket the socket of the client which should get checked
+     * @param clientSocket the s_Socket of the client which should get checked
      * @return default value if method gets not overriden
      */
     public boolean isSocketValid(Socket clientSocket) { return true; }
 
     /**
      * Override this method to handle "login"-Packages from a client
-     * @param clientSocket the socket of the client which should get loggedin
+     * @param clientSocket the s_Socket of the client which should get loggedin
      * @param networkPacket the NetworkPacket which the client send
      */
     public void socketLogin(Socket clientSocket, NetworkPacket networkPacket) { }
 
     /**
      * Override this method to handle "logout"-Packages from a client
-     * @param clientSocket the socket of the client which should get loggedin
+     * @param clientSocket the s_Socket of the client which should get loggedin
      * @param networkPacket the NetworkPacket which the client send
      */
     public void socketLogout(Socket clientSocket, NetworkPacket networkPacket) { }
@@ -89,13 +88,13 @@ public abstract class Server {
      * Opens the ServerSocket and try's to resolve the remote-Adress
      */
     private void initServer(){
-        if(serverSocket == null) {
+        if(s_Socket == null) {
             try {
-                serverSocket = new ServerSocket(this.port);
+                s_Socket = new ServerSocket(this.m_Port);
                 dispatchEvent(EventType.ON_MESSAGE, "[Info] Trying to resolve Address");
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(new URL("http://bot.whatismyipaddress.com/").openStream()));
-                    dispatchEvent(EventType.ON_MESSAGE, "[Info] Bound to Address " + in.readLine() + ":" + serverSocket.getLocalPort());
+                    dispatchEvent(EventType.ON_MESSAGE, "[Info] Bound to Address " + in.readLine() + ":" + s_Socket.getLocalPort());
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
                 }
@@ -108,37 +107,37 @@ public abstract class Server {
     }
 
     /**
-     * Starts the listeningThread of the Server which accepts
+     * Starts the m_Listener of the Server which accepts
      * new Client-Sockets and handle their Streams and processes
      * the received NetworkPackages
      */
     private void listen(){
-        listeningThread = new Thread(() -> {
+        Thread m_Listener = new Thread(() -> {
             while(true){
                 try {
-                    Socket clientSocket = serverSocket.accept();
-                    new Thread(() -> { // Make a new Thread, so we can listen always on this socket (no new socket for a new message)
-                        while(clientSocket.isConnected()) {
+                    Socket p_ClientSocket = s_Socket.accept();
+                    new Thread(() -> { // Make a new Thread, so we can listen always on this s_Socket (no new s_Socket for a new message)
+                        while(p_ClientSocket.isConnected()) {
                             try {
-                                ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
+                                ObjectInputStream inputStream = new ObjectInputStream(p_ClientSocket.getInputStream());
                                 Object input = inputStream.readObject();
 
                                 if (input instanceof NetworkPacket) {
                                     NetworkPacket networkPacket = (NetworkPacket) input;
                                     if(networkPacket.getId().equals(NetworkPacketId.CLIENT_LOGIN.getId())) {
-                                        socketLogin(clientSocket, networkPacket);
+                                        socketLogin(p_ClientSocket, networkPacket);
                                     } else if(networkPacket.getId().equals(NetworkPacketId.CLIENT_LOGOUT.getId())) {
-                                        socketLogout(clientSocket, networkPacket);
+                                        socketLogout(p_ClientSocket, networkPacket);
                                         break; // We can break here, no new messages from the client
                                     } else if(networkPacket.getId().equals(NetworkPacketId.PING_STATUS.getId())) {
-                                        write(clientSocket, new NetworkPacket(NetworkPacketId.PING_REPLY.getId(), true));
-                                    } else if(isSocketValid(clientSocket)) {
-                                        receiveNetworkPacket(clientSocket, networkPacket);
+                                        write(p_ClientSocket, new NetworkPacket(NetworkPacketId.PING_REPLY.getId(), true));
+                                    } else if(isSocketValid(p_ClientSocket)) {
+                                        receiveNetworkPacket(p_ClientSocket, networkPacket);
 
                                         // Send back a Status
-                                        write(clientSocket, new NetworkPacket(NetworkPacketId.REPLY_STATUS.getId(), true));
+                                        write(p_ClientSocket, new NetworkPacket(NetworkPacketId.REPLY_STATUS.getId(), true));
                                     } else {
-                                        write(clientSocket, new NetworkPacket(NetworkPacketId.REPLY_STATUS.getId(), false));
+                                        write(p_ClientSocket, new NetworkPacket(NetworkPacketId.REPLY_STATUS.getId(), false));
                                     }
                                 }
                             } catch (IOException e) { // Client has disconnected
@@ -158,7 +157,7 @@ public abstract class Server {
             }
         });
 
-        listeningThread.start();
+        m_Listener.start();
     }
 
     /**
@@ -178,11 +177,11 @@ public abstract class Server {
 
     // Event Methods
     protected void addListener(ServerListener listener){
-        listeners.add(listener);
+        s_EventListeners.add(listener);
     }
 
     private void dispatchEvent(EventType type, Object arg){
-        for (ServerListener listener : listeners) {
+        for (ServerListener listener : s_EventListeners) {
             switch (type) {
                 case ON_PRE_START:
                     listener.preStart();

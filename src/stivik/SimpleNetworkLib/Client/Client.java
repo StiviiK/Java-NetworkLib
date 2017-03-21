@@ -1,6 +1,9 @@
-package de.kuerzeder.stivik.SimpleNetworkLib.Client;
+package stivik.SimpleNetworkLib.Client;
 
-import de.kuerzeder.stivik.SimpleNetworkLib.Util.*;
+import stivik.SimpleNetworkLib.Util.EventType;
+import stivik.SimpleNetworkLib.Util.NetworkPacket;
+import stivik.SimpleNetworkLib.Util.NetworkPacketId;
+
 import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
@@ -18,24 +21,23 @@ import java.util.*;
  */
 public abstract class Client {
 
-    private boolean debugMode;
-    private InetSocketAddress remoteHost;
-    private int timeout;
-    private Socket networkSocket;
-    private boolean isLoggedin;
-    private Thread listeningThread;
-    private List<ClientListener> listeners;
-    private Thread pingThread;
+    private boolean m_DebugMode = true;
+    private InetSocketAddress s_HostAdress;
+    private int m_Timeout;
+    private Socket s_Socket;
+    private boolean m_IsLoggedIn;
+    private Thread m_Listener;
+    private List<ClientListener> m_EventListeners = new ArrayList<>();
+    private Thread s_PingListener;
 
     // Ping
-    private Long lastPing;
-    private Date lastPingTest;
+    private Long m_Ping;
+    private Date m_LastPingTest;
 
     public Client(String host, int port, int timeout, boolean debug) {
-        this.debugMode  = debug;
-        this.listeners  = new ArrayList<>();
-        this.remoteHost = new InetSocketAddress(host, port);
-        this.timeout    = timeout;
+        m_DebugMode = debug;
+        s_HostAdress = new InetSocketAddress(host, port);
+        m_Timeout = timeout;
     }
 
     // Abstract methods //
@@ -58,25 +60,25 @@ public abstract class Client {
 
     // Class methods //
     /**
-     * Connects to the server and opens an new networkSocket
+     * Connects to the server and opens an new s_Socket
      */
     public void connect(){
         try {
-            if(networkSocket == null || !networkSocket.isConnected() || networkSocket.isClosed()) {
-                networkSocket = new Socket();
-                networkSocket.connect(this.remoteHost, this.timeout);
+            if(s_Socket == null || !s_Socket.isConnected() || s_Socket.isClosed()) {
+                s_Socket = new Socket();
+                s_Socket.connect(this.s_HostAdress, this.m_Timeout);
             } else {
                 throw new AlreadyConnectedException();
             }
 
-            dispatchEvent(EventType.ON_MESSAGE, "[Info] Connected successfull to the Server(-Socket) on " + this.remoteHost.toString());
+            dispatchEvent(EventType.ON_MESSAGE, "[Info] Connected successfull to the Server(-Socket) on " + this.s_HostAdress.toString());
             dispatchEvent(EventType.ON_CONNECTED);
 
             // Start listening && Login to the Server
             listen();
             login();
         } catch (IOException | AlreadyConnectedException e) {
-            if(debugMode) {
+            if(m_DebugMode) {
                 e.printStackTrace();
                 dispatchEvent(EventType.ON_ERROR, "[Error] Connection to the Server(-Socket) failed. See StackTrace.");
             } else {
@@ -87,20 +89,20 @@ public abstract class Client {
     }
 
     /**
-     * Closes the connection to the server and closes the networkSocket
+     * Closes the connection to the server and closes the s_Socket
      */
     public void disconnect(){
         logout();
 
-        if(pingThread != null) {
-            pingThread.interrupt();
+        if(s_PingListener != null) {
+            s_PingListener.interrupt();
         }
-        if(listeningThread != null) {
-            listeningThread.interrupt();
+        if(m_Listener != null) {
+            m_Listener.interrupt();
         }
-        if(networkSocket != null && networkSocket.isConnected()) {
+        if(s_Socket != null && s_Socket.isConnected()) {
             try {
-                networkSocket.close();
+                s_Socket.close();
                 dispatchEvent(EventType.ON_DISCONNECTED);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -109,17 +111,17 @@ public abstract class Client {
     }
 
     /**
-     * Starts the listeningThread of the Client which waits
+     * Starts the m_Listener of the Client which waits
      * for new NetworkPackets from the Server and handles them
      */
     private void listen(){
-        if(listeningThread != null && listeningThread.isAlive())
+        if(m_Listener != null && m_Listener.isAlive())
             return;
 
-        listeningThread = new Thread(() -> {
-           while(networkSocket != null && networkSocket.isConnected()){
+        m_Listener = new Thread(() -> {
+           while(s_Socket != null && s_Socket.isConnected()){
                try {
-                   ObjectInputStream inputStream = new ObjectInputStream(networkSocket.getInputStream());
+                   ObjectInputStream inputStream = new ObjectInputStream(s_Socket.getInputStream());
                    Object input = inputStream.readObject();
 
                    if (input instanceof NetworkPacket) {
@@ -141,18 +143,18 @@ public abstract class Client {
            }
         });
 
-        listeningThread.start();
+        m_Listener.start();
     }
 
     /**
-     * Writes a new NetworkPacket on the (Client-)networkSocket,
+     * Writes a new NetworkPacket on the (Client-)s_Socket,
      * so the Server can read them and handle it
-     * @param networkPacket which should get written on the networkSocket-Stream
+     * @param networkPacket which should get written on the s_Socket-Stream
      */
     public void write(NetworkPacket networkPacket){
         try {
-            if(networkSocket != null && networkSocket.isConnected() && !networkSocket.isClosed()) {
-                ObjectOutputStream outputStream = new ObjectOutputStream(networkSocket.getOutputStream());
+            if(s_Socket != null && s_Socket.isConnected() && !s_Socket.isClosed()) {
+                ObjectOutputStream outputStream = new ObjectOutputStream(s_Socket.getOutputStream());
                 outputStream.writeObject(networkPacket);
             } else {
                 throw new NotYetConnectedException();
@@ -169,46 +171,46 @@ public abstract class Client {
      * check if the connection is still alive.
      */
     public void startPingTest(){
-        if(pingThread == null) {
-            pingThread = new Thread(() -> {
+        if(s_PingListener == null) {
+            s_PingListener = new Thread(() -> {
                 while (true) {
                     try {Thread.sleep(3 * 1000);} catch (InterruptedException ignored) {}
 
-                    if(networkSocket != null && networkSocket.isConnected() && !networkSocket.isClosed()) {
-                        lastPingTest = Calendar.getInstance().getTime();
+                    if(s_Socket != null && s_Socket.isConnected() && !s_Socket.isClosed()) {
+                        m_LastPingTest = Calendar.getInstance().getTime();
                         write(new NetworkPacket(NetworkPacketId.PING_STATUS.getId(), true));
                     }
                 }
             });
-            pingThread.start();
+            s_PingListener.start();
         }
     }
 
     /**
      * Is the "hidden" Callback handler for an Ping-Reply Package
-     * from the Server. It sets the lastPing value.
+     * from the Server. It sets the m_Ping value.
      */
     private void onPingReply(){
-        lastPing = (Calendar.getInstance().getTime().getTime() - lastPingTest.getTime());
+        m_Ping = (Calendar.getInstance().getTime().getTime() - m_LastPingTest.getTime());
     }
 
     /**
-     * Returns the lastPing latency between the Client and the Server.
+     * Returns the m_Ping latency between the Client and the Server.
      * Gets update all ~3000ms (+ Latency).
      * @return the last captured ping value
      */
     public long getPing(){
-        return lastPing != null ? lastPing : -1;
+        return m_Ping != null ? m_Ping : -1;
     }
     //
 
     // Event Methods
     protected void addListener(ClientListener listener){
-        listeners.add(listener);
+        m_EventListeners.add(listener);
     }
 
     private void dispatchEvent(EventType type, Object arg){
-        for (ClientListener listener : listeners) {
+        for (ClientListener listener : m_EventListeners) {
             switch (type) {
                 case ON_MESSAGE:
                     listener.onMessage(arg);

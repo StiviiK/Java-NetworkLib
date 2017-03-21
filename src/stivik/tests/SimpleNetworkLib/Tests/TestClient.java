@@ -1,9 +1,9 @@
-package de.kuerzeder.stivik.SimpleNetworkLib.Tests;
+package stivik.tests.SimpleNetworkLib.Tests;
 
-import de.kuerzeder.stivik.SimpleNetworkLib.Client.Client;
-import de.kuerzeder.stivik.SimpleNetworkLib.Client.ClientListener;
-import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPacket;
-import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPacketId;
+import stivik.SimpleNetworkLib.Client.Client;
+import stivik.SimpleNetworkLib.Client.ClientListener;
+import stivik.SimpleNetworkLib.Util.NetworkPacket;
+import stivik.SimpleNetworkLib.Util.NetworkPacketId;
 
 /**
  * SimpleNetworkLib:

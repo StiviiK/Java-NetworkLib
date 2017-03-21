@@ -1,4 +1,4 @@
-package de.kuerzeder.stivik.SimpleNetworkLib.Util;
+package stivik.SimpleNetworkLib.Util;
 
 /**
  * SimpleNetworkLib:

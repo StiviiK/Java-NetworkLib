@@ -1,6 +1,6 @@
-package de.kuerzeder.stivik.SimpleNetworkLib.Server;
+package stivik.SimpleNetworkLib.Server;
 
-import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetListener;
+import stivik.SimpleNetworkLib.Util.NetListener;
 
 /**
  * SimpleNetworkLib:

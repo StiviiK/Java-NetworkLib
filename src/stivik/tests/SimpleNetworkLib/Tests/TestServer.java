@@ -1,8 +1,8 @@
-package de.kuerzeder.stivik.SimpleNetworkLib.Tests;
+package stivik.tests.SimpleNetworkLib.Tests;
 
-import de.kuerzeder.stivik.SimpleNetworkLib.Server.Server;
-import de.kuerzeder.stivik.SimpleNetworkLib.Server.ServerListener;
-import de.kuerzeder.stivik.SimpleNetworkLib.Util.NetworkPacket;
+import stivik.SimpleNetworkLib.Server.Server;
+import stivik.SimpleNetworkLib.Server.ServerListener;
+import stivik.SimpleNetworkLib.Util.NetworkPacket;
 
 import java.net.Socket;
 import java.util.ArrayList;
@@ -16,8 +16,8 @@ public class TestServer extends Server implements ServerListener {
 
     private ArrayList<Socket> validSockets = new ArrayList<>();
 
-    public TestServer(int port, boolean debug) {
-        super(port, debug);
+    public TestServer(int port) {
+        super(port);
         super.addListener(this);
     }
 
