@@ -1,4 +1,4 @@
-package stivik.tests.SimpleNetworkLib.Tests;
+package stivik.tests.SimpleNetworkLib;
 
 import stivik.SimpleNetworkLib.Util.NetworkPacket;
 
